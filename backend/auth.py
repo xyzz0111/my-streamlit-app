@@ -3,6 +3,12 @@ from backend.config import USERS
 
 def check_password():
     def password_entered():
+        # Add safety check for USERS
+        if USERS is None:
+            st.error("⚠️ Configuration error: User database not loaded")
+            st.session_state["password_correct"] = False
+            return
+            
         if st.session_state["username"] in USERS and USERS[st.session_state["username"]] == st.session_state["password"]:
             st.session_state["password_correct"] = True
             st.session_state["logged_in_user"] = st.session_state["username"]

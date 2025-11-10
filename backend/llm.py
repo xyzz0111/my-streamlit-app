@@ -4,6 +4,16 @@ import streamlit as st
 import requests
 from backend.config import GEMINI_API_KEY, GEMINI_API_URL
 
+# Add these to your config.py:
+# GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+# GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+try:
+    from backend.config import GROQ_API_KEY, GROQ_API_URL
+except ImportError:
+    GROQ_API_KEY = ""
+    GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
 EXTRACTION_PROMPT = """
 आप एक डेटा एक्सट्रैक्शन सहायक हैं। 
 नीचे दिए गए अनस्ट्रक्चर्ड टेक्स्ट से निम्नलिखित जानकारी निकालें:
@@ -65,10 +75,64 @@ def extract_json_from_text(text: str) -> dict:
     except json.JSONDecodeError:
         return None
 
+def call_groq(prompt: str, context: str = "") -> dict:
+    """Fallback function to call Groq API when Gemini fails"""
+    if not GROQ_API_KEY:
+        st.warning("⚠️ Groq API key not found for fallback!")
+        return None
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {GROQ_API_KEY}"
+    }
+
+    payload = {
+        "model": "llama-3.3-70b-versatile",  # Fast and accurate model
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a data extraction assistant. Always respond with valid JSON only, no extra text."
+            },
+            {
+                "role": "user",
+                "content": f"{prompt}\n\n## Input:\n{context}"
+            }
+        ],
+        "temperature": 0.1,
+        "max_tokens": 1024
+    }
+
+    try:
+        response = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        
+        if "choices" in result and result["choices"]:
+            raw_text = result["choices"][0]["message"]["content"]
+            extracted_data = extract_json_from_text(raw_text)
+            
+            if extracted_data:
+                from backend.utils import validate_and_format_date
+                if 'date' in extracted_data:
+                    extracted_data['date'] = validate_and_format_date(extracted_data['date'])
+                
+                return extracted_data
+            else:
+                st.error("⚠️ Could not parse JSON from Groq response.")
+                st.code(raw_text)
+                return None
+        else:
+            st.error("❌ Groq API did not return any data.")
+            return None
+            
+    except Exception as e:
+        st.error(f"❌ Groq Error: {e}")
+        return None
+
 def call_gemini(prompt: str, context: str = "") -> dict:
     if not GEMINI_API_KEY:
-        st.error("⚠️ Gemini API key not found!")
-        return None
+        st.warning("⚠️ Gemini API key not found! Trying Groq fallback...")
+        return call_groq(prompt, context)
 
     headers = {
         "Content-Type": "application/json",
@@ -103,13 +167,59 @@ def call_gemini(prompt: str, context: str = "") -> dict:
             st.error("❌ Gemini API did not return any data.")
             return None
             
+    except requests.exceptions.HTTPError as e:
+        # Check for rate limit or quota errors
+        if e.response.status_code == 429 or e.response.status_code == 503:
+            st.warning(f"⚠️ Gemini rate limit/quota exceeded. Switching to Groq fallback...")
+            return call_groq(prompt, context)
+        else:
+            st.error(f"❌ Gemini HTTP Error: {e}")
+            st.warning("🔄 Trying Groq fallback...")
+            return call_groq(prompt, context)
+            
+    except requests.exceptions.Timeout:
+        st.warning("⚠️ Gemini request timed out. Switching to Groq fallback...")
+        return call_groq(prompt, context)
+        
     except Exception as e:
-        st.error(f"❌ Error: {e}")
+        st.error(f"❌ Gemini Error: {e}")
+        st.warning("🔄 Trying Groq fallback...")
+        return call_groq(prompt, context)
+
+def call_groq_simple(prompt: str) -> str:
+    """Fallback for simple text generation"""
+    if not GROQ_API_KEY:
+        return None
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {GROQ_API_KEY}"
+    }
+    
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.1,
+        "max_tokens": 512
+    }
+    
+    try:
+        response = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        
+        if "choices" in result and result["choices"]:
+            text = result["choices"][0]["message"]["content"]
+            text = re.sub(r'```json\s*', '', text)
+            text = re.sub(r'```\s*', '', text)
+            return text.strip()
+        return None
+    except:
         return None
 
 def call_gemini_simple(prompt: str) -> str:
     if not GEMINI_API_KEY:
-        return None
+        return call_groq_simple(prompt)
     
     headers = {
         "Content-Type": "application/json",
@@ -132,5 +242,9 @@ def call_gemini_simple(prompt: str) -> str:
             text = re.sub(r'```\s*', '', text)
             return text.strip()
         return None
-    except:
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 429 or e.response.status_code == 503:
+            return call_groq_simple(prompt)
         return None
+    except:
+        return call_groq_simple(prompt)
