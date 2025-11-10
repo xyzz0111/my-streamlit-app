@@ -1,0 +1,10 @@
+streamlit>=1.33.0
+pandas
+numpy
+requests
+python-dotenv
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+# scikit-learn
