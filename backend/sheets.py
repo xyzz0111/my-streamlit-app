@@ -38,7 +38,7 @@ def read_all_records():
     try:
         result = sheet.values().get(
             spreadsheetId=SPREADSHEET_ID,
-            range='Sheet1!A:N'
+            range='Sheet1!A:O'
         ).execute()
         rows = result.get('values', [])
         return rows
@@ -70,6 +70,7 @@ def append_record_to_sheet(record_data: dict):
                 'addressHindi', 'addressEnglish',
                 'wardArea',
                 'mobile', 
+                'dairyNumber',
                 'pageNumber', 
                 'amount',
                 'interest',
@@ -93,6 +94,7 @@ def append_record_to_sheet(record_data: dict):
             record_data.get('addressEnglish', ''),
             record_data.get('wardArea', ''),
             record_data.get('mobile', ''),
+            record_data.get('dairyNumber',''),
             record_data.get('pageNumber', ''),
             record_data.get('amount', ''),
             record_data.get('interest', ''),
@@ -103,7 +105,7 @@ def append_record_to_sheet(record_data: dict):
         
         sheet.values().append(
             spreadsheetId=SPREADSHEET_ID,
-            range='Sheet1!A:N',
+            range='Sheet1!A:O',
             valueInputOption='RAW',
             insertDataOption='INSERT_ROWS',
             body={'values': row}
@@ -123,7 +125,7 @@ def update_loan_status(row_number: int, new_status: str):
     try:
         result = sheet.values().update(
             spreadsheetId=SPREADSHEET_ID,
-            range=f'Sheet1!N{row_number}',
+            range=f'Sheet1!O{row_number}',
             valueInputOption='RAW',
             body={'values': [[new_status]]}
         ).execute()

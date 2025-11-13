@@ -4,15 +4,13 @@ import streamlit as st
 import requests
 from backend.config import GEMINI_API_KEY, GEMINI_API_URL
 
-# Add these to your config.py:
-# GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-# GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 try:
     from backend.config import GROQ_API_KEY, GROQ_API_URL
 except ImportError:
     GROQ_API_KEY = ""
     GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
 
 EXTRACTION_PROMPT = """
 आप एक डेटा एक्सट्रैक्शन सहायक हैं। 
@@ -46,6 +44,7 @@ Format exactly like this:
   "wardArea": "locality/ward info or Not mentioned",
   "mobile": "10-digit number or Not mentioned",
   "pageNumber": "value or Not mentioned",
+  "dairyNumber": "value or Not mentioned",
   "amount": "numeric value only or Not mentioned",
   "interest": "value or Not mentioned",
   "guarantee": "number of months or Not mentioned",
@@ -74,6 +73,7 @@ def extract_json_from_text(text: str) -> dict:
         return json.loads(text.strip())
     except json.JSONDecodeError:
         return None
+
 
 def call_groq(prompt: str, context: str = "") -> dict:
     """Fallback function to call Groq API when Gemini fails"""
@@ -129,10 +129,11 @@ def call_groq(prompt: str, context: str = "") -> dict:
         st.error(f"❌ Groq Error: {e}")
         return None
 
+
 def call_gemini(prompt: str, context: str = "") -> dict:
     if not GEMINI_API_KEY:
-        st.warning("⚠️ Gemini API key not found! Trying Groq fallback...")
-        return call_groq(prompt, context)
+        st.error("⚠️ Gemini API key not found!")
+        return None
 
     headers = {
         "Content-Type": "application/json",
@@ -216,7 +217,6 @@ def call_groq_simple(prompt: str) -> str:
         return None
     except:
         return None
-
 def call_gemini_simple(prompt: str) -> str:
     if not GEMINI_API_KEY:
         return call_groq_simple(prompt)

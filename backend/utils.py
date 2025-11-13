@@ -50,6 +50,7 @@ DEFAULT_FIELDS = {
     "addressEnglish": "Not mentioned",
     "wardArea": "Not mentioned",
     "mobile": "Not mentioned",
+    'dairyNumber': 'Not Mentioned',
     "pageNumber": "Not mentioned",
     "amount": "Not mentioned",
     "interest": "Not mentioned",

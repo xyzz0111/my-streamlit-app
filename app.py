@@ -16,7 +16,11 @@ if st.sidebar.button("🚪 Logout"):
 
 st.sidebar.markdown("---")
 
-page = st.sidebar.radio("📋 Navigation", ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records"])
+    # Add after the existing page radio
+if st.session_state['logged_in_user'] == 'admin':
+    page = st.sidebar.radio("📋 Navigation", ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records", "📊 Analytics"])
+else:
+    page = st.sidebar.radio("📋 Navigation", ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records"])
 
 if page == "➕ Add Record":
     add_record.render()
@@ -24,7 +28,18 @@ elif page == "🔍 Search Records":
     search_records.render()
 elif page == "📚 Last 10 Records":
     last_records.render()
+# Then add this in the page routing section
+elif page == "📊 Analytics":
+    from frontend.pages import metrics
+    metrics.render()
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### ℹ️ About KuberX")
-st.sidebar.markdown("Loan record management system with bilingual support")
+# Custom CSS to hide elements
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display:none;}
+    [data-testid="stToolbar"] {display: none;}
+    </style>
+    """, unsafe_allow_html=True)
