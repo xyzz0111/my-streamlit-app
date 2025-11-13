@@ -32,15 +32,3 @@ elif page == "📚 Last 10 Records":
 elif page == "📊 Analytics":
     from frontend.pages import metrics
     metrics.render()
-
-# Hide only the unwanted elements, keep sidebar visible
-hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-.stDeployButton {display:none;}
-[data-testid="stToolbar"] {display: none;}
-</style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
