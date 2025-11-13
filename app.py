@@ -33,13 +33,14 @@ elif page == "📊 Analytics":
     from frontend.pages import metrics
     metrics.render()
 
-# Custom CSS to hide elements
-st.markdown("""
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .stDeployButton {display:none;}
-    [data-testid="stToolbar"] {display: none;}
-    </style>
-    """, unsafe_allow_html=True)
+# Hide only the unwanted elements, keep sidebar visible
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+.stDeployButton {display:none;}
+[data-testid="stToolbar"] {display: none;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
