@@ -31,27 +31,27 @@ IMPORTANT: You must respond with ONLY valid JSON, no extra text before or after.
    - "6 महीने" / "6 months" → "6"
    - "30 दिन" / "30 days" → "1"
    - "2 साल" / "2 years" → "24"
-   If not mentioned, write "Not mentioned"
+   If Not mentioned, write "NA"
 9. **Relationship/Reference**: Extract relationship information (e.g., "पत्नि प्रर्मिला देवी", "पिता राम लाल", "Wife: Pramila Devi")
 
 Format exactly like this:
 {
-  "date": "DD/MM/YYYY or Not mentioned",
-  "nameHindi": "हिंदी नाम or Not mentioned",
-  "nameEnglish": "English Name or Not mentioned",
-  "addressHindi": "हिंदी पता or Not mentioned",
-  "addressEnglish": "English Address or Not mentioned",
-  "wardArea": "locality/ward info or Not mentioned",
-  "mobile": "10-digit number or Not mentioned",
-  "pageNumber": "value or Not mentioned",
-  "dairyNumber": "value or Not mentioned",
-  "amount": "numeric value only or Not mentioned",
-  "interest": "value or Not mentioned",
-  "guarantee": "number of months or Not mentioned",
-  "relationship": "relationship/reference person or Not mentioned"
+  "date": "DD/MM/YYYY or NA",
+  "nameHindi": "हिंदी नाम or NA",
+  "nameEnglish": "English Name or NA",
+  "addressHindi": "हिंदी पता or NA",
+  "addressEnglish": "English Address or NA",
+  "wardArea": "locality/ward info or NA",
+  "mobile": "10-digit number or NA",
+  "pageNumber": "value or NA",
+  "dairyNumber": "value or NA",
+  "amount": "numeric value only or NA",
+  "interest": "value or NA",
+  "guarantee": "number of months or NA",
+  "relationship": "relationship/reference person (write in english) or NA"
 }
 
-अगर कोई जानकारी नहीं दी गई है तो "Not mentioned" लिखें।
+अगर कोई जानकारी नहीं दी गई है तो "NA" लिखें।
 सिर्फ JSON आउटपुट दें, किसी अतिरिक्त टेक्स्ट के बिना।
 """
 

@@ -150,14 +150,16 @@ def get_ward_wise_distribution(records):
 
 def get_loan_amount_ranges(records):
     """
-    Categorize loans by amount ranges
+    Categorize loans by amount ranges with detailed breakdowns
     Returns: list of dicts with range and count
     """
     if not records or len(records) <= 1:
         return []
     
     ranges = {
-        '0-10K': (0, 10000),
+        '0-2K': (0, 2000),
+        '2K-5K': (2000, 5000),
+        '5K-10K': (5000, 10000),
         '10K-25K': (10000, 25000),
         '25K-50K': (25000, 50000),
         '50K-1L': (50000, 100000),
@@ -178,7 +180,7 @@ def get_loan_amount_ranges(records):
                 break
     
     result = []
-    for range_name in ['0-10K', '10K-25K', '25K-50K', '50K-1L', '1L+']:
+    for range_name in ['0-2K', '2K-5K', '5K-10K', '10K-25K', '25K-50K', '50K-1L', '1L+']:
         result.append({
             'range': range_name,
             'count': range_data[range_name]

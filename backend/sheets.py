@@ -94,7 +94,7 @@ def append_record_to_sheet(record_data: dict):
             record_data.get('addressEnglish', ''),
             record_data.get('wardArea', ''),
             record_data.get('mobile', ''),
-            record_data.get('dairyNumber',''),
+            record_data.get('dairyNumber','d2'),
             record_data.get('pageNumber', ''),
             record_data.get('amount', ''),
             record_data.get('interest', ''),

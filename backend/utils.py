@@ -43,17 +43,17 @@ def validate_and_format_date(date_str: str) -> str:
     return date_str
 
 DEFAULT_FIELDS = {
-    "date": "Not mentioned",
-    "nameHindi": "Not mentioned",
-    "nameEnglish": "Not mentioned",
-    "addressHindi": "Not mentioned",
-    "addressEnglish": "Not mentioned",
-    "wardArea": "Not mentioned",
-    "mobile": "Not mentioned",
-    'dairyNumber': 'Not Mentioned',
-    "pageNumber": "Not mentioned",
-    "amount": "Not mentioned",
-    "interest": "Not mentioned",
-    "guarantee": "Not mentioned",
-    "relationship": "Not mentioned"
+    "date": "NA",
+    "nameHindi": "NA",
+    "nameEnglish": "NA",
+    "addressHindi": "NA",
+    "addressEnglish": "NA",
+    "wardArea": "NA",
+    "mobile": "NA",
+    'dairyNumber': 'd2',
+    "pageNumber": "NA",
+    "amount": "NA",
+    "interest": "NA",
+    "guarantee": "NA",
+    "relationship": "NA"
 }

@@ -24,7 +24,7 @@ def extraction_section():
         if extracted_data:
             for field in DEFAULT_FIELDS:
                 if field not in extracted_data:
-                    extracted_data[field] = "Not mentioned"
+                    extracted_data[field] = "NA"
             
             st.session_state["record_data"] = extracted_data
             st.success("✅ Extraction complete! Review and edit below.")
@@ -54,44 +54,44 @@ def render():
             record = st.session_state["record_data"]
             
             # Date
-            date_value = record.get('date', 'Not mentioned')
+            date_value = record.get('date', 'NA')
             date = st.text_input("📅 Date (DD/MM/YYYY)", date_value, help="Format: 15/03/2024")
             
             st.markdown("##### 👤 Name (both languages)")
             col1, col2 = st.columns(2)
             with col1:
-                nameHindi = st.text_input("Name (Hindi)", record.get('nameHindi', 'Not mentioned'))
+                nameHindi = st.text_input("Name (Hindi)", record.get('nameHindi', 'NA'))
             with col2:
-                nameEnglish = st.text_input("Name (English)", record.get('nameEnglish', 'Not mentioned'))
+                nameEnglish = st.text_input("Name (English)", record.get('nameEnglish', 'NA'))
             
             st.markdown("##### 📍 Address (both languages)")
             col1, col2, col3 = st.columns(3)
             with col1:
-                addressHindi = st.text_area("Address (Hindi)", record.get('addressHindi', 'Not mentioned'), height=100)
+                addressHindi = st.text_area("Address (Hindi)", record.get('addressHindi', 'NA'), height=100)
             with col2:
-                addressEnglish = st.text_area("Address (English)", record.get('addressEnglish', 'Not mentioned'), height=100)
+                addressEnglish = st.text_area("Address (English)", record.get('addressEnglish', 'NA'), height=100)
             with col3:
-                wardArea = st.text_input("Ward/Area\n(वार्ड/क्षेत्र)", record.get('wardArea', 'Not mentioned'))
+                wardArea = st.text_input("Ward/Area\n(वार्ड/क्षेत्र)", record.get('wardArea', 'NA'))
             
             st.markdown("##### 💰 Loan Details")
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
-                mobile = st.text_input("📱 Mobile", record.get('mobile', 'Not mentioned'))
+                mobile = st.text_input("📱 Mobile", record.get('mobile', 'NA'))
             with col2:
-                dairyNumber = st.text_input("Dairy", record.get('Dairy', 'Not mentioned'))
+                dairyNumber = st.text_input("Dairy", record.get('Dairy', 'd2'))
             with col3:
-                pageNumber = st.text_input("📄 Page", record.get('pageNumber', 'Not mentioned'))
+                pageNumber = st.text_input("📄 Page", record.get('pageNumber', 'NA'))
             with col4:
-                amount = st.text_input("💰 Amount", record.get('amount', 'Not mentioned'))
+                amount = st.text_input("💰 Amount", record.get('amount', 'NA'))
             with col5:
-                interest = st.text_input("📈 Interest", record.get('interest', 'Not mentioned'))
+                interest = st.text_input("📈 Interest", record.get('interest', 'NA'))
             
             st.markdown("##### 📝 Additional Context")
             col1, col2 = st.columns(2)
             with col1:
-                guarantee = st.text_input("🔒 Guarantee (Months)", record.get('guarantee', 'Not mentioned'), help="e.g., 12 for 1 year")
+                guarantee = st.text_input("🔒 Guarantee (Months)", record.get('guarantee', 'NA'), help="e.g., 12 for 1 year")
             with col2:
-                relationship = st.text_input("👥 Relationship/Reference", record.get('relationship', 'Not mentioned'), help="e.g., पत्नि प्रर्मिला देवी")
+                relationship = st.text_input("👥 Relationship/Reference", record.get('relationship', 'NA'), help="e.g., पत्नि प्रर्मिला देवी")
             
             # Form buttons
             col1, col2 = st.columns([3, 1])
@@ -110,7 +110,7 @@ def render():
                 }
                 
                 # Validate and format date
-                if edited['date'] != "Not mentioned":
+                if edited['date'] != "NA":
                     formatted_date = validate_and_format_date(edited['date'])
                     if formatted_date != edited['date']:
                         st.warning(f"⚠️ Date reformatted to: {formatted_date}")
