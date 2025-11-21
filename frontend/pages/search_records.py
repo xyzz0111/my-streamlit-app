@@ -14,7 +14,7 @@ def render():
     with col1:
         basic_search_btn = st.button("⚡ Quick Search (Fast)", use_container_width=True)
     with col2:
-        semantic_search_btn = st.button("🧠 Smart Search (AI)", use_container_width=True)
+        semantic_search_btn = st.button("🧠 Smart Search", use_container_width=True)
     with col3:
         deep_search_btn = st.button("🔬 Deep Search (Thorough)", use_container_width=True)
     
