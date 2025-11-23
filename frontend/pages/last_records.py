@@ -19,15 +19,8 @@ def render():
             st.dataframe(df, use_container_width=True, height=600)
             
             csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Download Last 10 as CSV",
-                data=csv,
-                file_name="last_10_loan_records.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
             
-            st.info(f"📊 Showing: {len(df)} record(s) | Total in database: {len(records)-1}")
+            st.info(f"📊 Showing: {len(df)} record(s)")
         else:
             st.info("📝 No records found. Add your first record!")
     else:

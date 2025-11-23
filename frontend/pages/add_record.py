@@ -96,7 +96,7 @@ def render():
             # Form buttons
             col1, col2 = st.columns([3, 1])
             with col1:
-                submit = st.form_submit_button("💾 Save to Google Sheets", type="primary", use_container_width=True)
+                submit = st.form_submit_button("💾 Save", type="primary", use_container_width=True)
             with col2:
                 cancel = st.form_submit_button("🔄 Clear", use_container_width=True)
             

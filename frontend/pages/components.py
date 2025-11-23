@@ -62,14 +62,15 @@ def display_record(result: dict, idx: int):
             st.write(f"**📍 Address (Hindi):** {result.get('addressHindi', 'N/A')}")
             st.write(f"**📍 Address (English):** {result.get('addressEnglish', 'N/A')}")
             st.write(f"**🏘️ Ward/Area:** {result.get('wardArea', 'N/A')}")
-        
+            st.write(f"**👥 Relationship:** {result.get('relationship', 'N/A')}")
+
         with col2:
             st.write(f"**📱 Mobile:** {result.get('mobile', 'N/A')}")
+            st.write(f"**📄 Dairy Number:** {result.get('dairyNumber', 'N/A')}")
             st.write(f"**📄 Page Number:** {result.get('pageNumber', 'N/A')}")
             st.write(f"**💰 Amount:** {result.get('amount', 'N/A')}")
             st.write(f"**📈 Interest:** {result.get('interest', 'N/A')}")
             st.write(f"**🔒 Guarantee (Months):** {result.get('guarantee', 'N/A')}")
-            st.write(f"**👥 Relationship:** {result.get('relationship', 'N/A')}")
         
         if loan_status == "Active":
             close_loan_fragment(row_number, record_id)

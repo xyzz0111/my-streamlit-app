@@ -1,43 +1,78 @@
 import streamlit as st
 from backend.config import USERS, SECRET_KEY
 import hashlib
-import secrets
 from datetime import datetime, timedelta
+import base64
+import json
 
-SECRET_KEY = SECRET_KEY
+# Secret key for token generation (IMPORTANT: Change this to a random string)
+SECRET_KEY = "CHANGE_THIS_TO_RANDOM_STRING_IN_PRODUCTION"
+
+# Token expiry: 200 days
+TOKEN_EXPIRY_DAYS = 200
 
 def generate_secure_token(username):
     """Generate a secure token with timestamp"""
-    timestamp = datetime.now().isoformat()
-    data = f"{username}_{timestamp}_{SECRET_KEY}"
-    return hashlib.sha256(data.encode()).hexdigest()
+    expiry_date = datetime.now() + timedelta(days=TOKEN_EXPIRY_DAYS)
+    
+    # Create token data
+    token_data = {
+        "username": username,
+        "expiry": expiry_date.isoformat()
+    }
+    
+    # Encode token data
+    token_json = json.dumps(token_data)
+    token_b64 = base64.b64encode(token_json.encode()).decode()
+    
+    # Create signature
+    signature = hashlib.sha256(f"{token_b64}_{SECRET_KEY}".encode()).hexdigest()
+    
+    return f"{token_b64}.{signature}"
 
-def verify_token(username, token, max_age_hours=24):
+def verify_token(token):
     """Verify token is valid and not expired"""
     try:
-        # Simple verification (you can enhance this with actual timestamp checking)
-        expected_token = hashlib.sha256(f"{username}_{SECRET_KEY}".encode()).hexdigest()
-        return token == expected_token
+        # Split token and signature
+        token_b64, signature = token.split(".")
+        
+        # Verify signature
+        expected_signature = hashlib.sha256(f"{token_b64}_{SECRET_KEY}".encode()).hexdigest()
+        if signature != expected_signature:
+            return None
+        
+        # Decode token data
+        token_json = base64.b64decode(token_b64).decode()
+        token_data = json.loads(token_json)
+        
+        # Check expiry
+        expiry_date = datetime.fromisoformat(token_data["expiry"])
+        if datetime.now() > expiry_date:
+            return None
+        
+        # Check if user still exists
+        username = token_data["username"]
+        if username not in USERS:
+            return None
+        
+        return username
     except:
-        return False
+        return None
 
 def set_login_cookie(username):
     """Set login cookie in query params (Streamlit Cloud compatible)"""
-    token = hashlib.sha256(f"{username}_{SECRET_KEY}".encode()).hexdigest()
-    st.query_params["auth_user"] = username
+    token = generate_secure_token(username)
     st.query_params["auth_token"] = token
 
 def get_login_from_cookie():
     """Get login info from query params"""
     query_params = st.query_params
     
-    if "auth_user" in query_params and "auth_token" in query_params:
-        username = query_params["auth_user"]
+    if "auth_token" in query_params:
         token = query_params["auth_token"]
-        
-        # Verify user exists and token is valid
-        if username in USERS and verify_token(username, token):
-            return username
+        username = verify_token(token)
+        return username
+    
     return None
 
 def check_password():

@@ -14,8 +14,9 @@ if st.sidebar.button("🚪 Logout"):
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     
-    # Clear query params
-    st.query_params.clear()
+    # Clear authentication token
+    if "auth_token" in st.query_params:
+        del st.query_params["auth_token"]
     
     st.rerun()
 
