@@ -22,19 +22,28 @@ if st.sidebar.button("🚪 Logout"):
 
 st.sidebar.markdown("---")
 
-    # Add after the existing page radio
+# Navigation based on user role
 if st.session_state['logged_in_user'] == 'admin':
-    page = st.sidebar.radio("📋 Navigation", ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records", "📊 Analytics"])
+    page = st.sidebar.radio(
+        "📋 Navigation", 
+        ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records", "📊 Analytics", "📈 Interest Stats"]
+    )
 else:
-    page = st.sidebar.radio("📋 Navigation", ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records"])
+    page = st.sidebar.radio(
+        "📋 Navigation", 
+        ["🔍 Search Records", "➕ Add Record", "📚 Last 10 Records"]
+    )
 
+# Page routing
 if page == "➕ Add Record":
     add_record.render()
 elif page == "🔍 Search Records":
     search_records.render()
 elif page == "📚 Last 10 Records":
     last_records.render()
-# Then add this in the page routing section
 elif page == "📊 Analytics":
     from frontend.pages import metrics
     metrics.render()
+elif page == "📈 Interest Stats":
+    from frontend.pages import stats
+    stats.render()

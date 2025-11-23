@@ -1,6 +1,6 @@
 """
 Analytics Dashboard - Frontend Module
-Displays business insights and growth metrics
+Displays business insights with comprehensive growth metrics
 """
 
 import streamlit as st
@@ -9,6 +9,42 @@ import plotly.express as px
 import plotly.graph_objects as go
 from backend.analytics import generate_dashboard_data
 from backend.storage import load_records
+
+def render_growth_metric_card(title, growth_data, icon):
+    """Render a single growth metric card"""
+    if not growth_data:
+        return
+    
+    st.markdown(f"#### {icon} {title}")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Count growth
+        count_delta = growth_data.get('count_growth', 0)
+        count_color = "normal" if abs(count_delta) < 5 else "inverse" if count_delta < 0 else "off"
+        
+        st.metric(
+            "Loan Count Growth",
+            f"{count_delta:+.2f}%",
+            delta=f"{growth_data.get('trend', '').title()}",
+            delta_color=count_color
+        )
+        
+        st.caption(f"**Current:** {growth_data.get('current_count', 0)} loans | **Previous:** {growth_data.get('previous_count', 0)} loans")
+    
+    with col2:
+        # Amount growth
+        amount_delta = growth_data.get('amount_growth', 0)
+        amount_color = "normal" if abs(amount_delta) < 5 else "inverse" if amount_delta < 0 else "off"
+        
+        st.metric(
+            "Amount Growth",
+            f"{amount_delta:+.2f}%",
+            delta=f"₹{growth_data.get('current_amount', 0):,.0f} → ₹{growth_data.get('previous_amount', 0):,.0f}"
+        )
+        
+        st.caption(f"**Comparing:** {growth_data.get('current_period', 'N/A')} vs {growth_data.get('previous_period', 'N/A')}")
 
 def render():
     st.title("📊 Analytics Dashboard")
@@ -48,29 +84,102 @@ def render():
     
     st.markdown("---")
     
-    # Growth Metrics
+    # Comprehensive Growth Metrics Section
+    st.markdown("## 📊 Growth Trends Analysis")
+    
     growth = dashboard_data['growth_metrics']
-    if growth['mom_growth_count'] != 0:
-        st.markdown("### 📊 Growth Trend")
-        gcol1, gcol2, gcol3 = st.columns(3)
-        
-        with gcol1:
-            st.metric(
-                "Month-over-Month (Count)", 
-                f"{growth['mom_growth_count']:+.2f}%",
-                delta=f"{growth['trend'].title()}"
+    
+    # Create tabs for different growth views
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📅 Monthly (MoM)", 
+        "📆 Quarterly (QoQ)", 
+        "🔄 Year-over-Year Quarterly", 
+        "📈 Annual (YoY)"
+    ])
+    
+    with tab1:
+        if growth.get('monthly'):
+            render_growth_metric_card(
+                "Month-over-Month Growth", 
+                growth['monthly'],
+                "📅"
             )
-        
-        with gcol2:
-            st.metric(
-                "Month-over-Month (Amount)", 
-                f"{growth['mom_growth_amount']:+.2f}%"
+        else:
+            st.info("Insufficient data for monthly growth analysis (need at least 2 months)")
+    
+    with tab2:
+        if growth.get('quarterly'):
+            render_growth_metric_card(
+                "Quarter-over-Quarter Growth", 
+                growth['quarterly'],
+                "📆"
             )
+        else:
+            st.info("Insufficient data for quarterly growth analysis (need at least 2 quarters)")
+    
+    with tab3:
+        if growth.get('yoy_quarterly'):
+            render_growth_metric_card(
+                "Year-over-Year Quarterly Comparison", 
+                growth['yoy_quarterly'],
+                "🔄"
+            )
+            st.info("💡 Compares the same quarter across different years (e.g., Q1 2024 vs Q1 2023)")
+        else:
+            st.info("Insufficient data for year-over-year quarterly comparison (need at least 5 quarters)")
+    
+    with tab4:
+        if growth.get('yearly'):
+            render_growth_metric_card(
+                "Year-over-Year Annual Growth", 
+                growth['yearly'],
+                "📈"
+            )
+        else:
+            st.info("Insufficient data for yearly growth analysis (need at least 2 years)")
+    
+    st.markdown("---")
+    
+    # Quarterly Trend Chart
+    st.markdown("### 📆 Quarterly Disbursement Trend")
+    quarterly_data = dashboard_data['quarterly_trend']
+    if quarterly_data:
+        df_quarterly = pd.DataFrame(quarterly_data)
         
-        with gcol3:
-            st.info(f"📅 Comparing {growth['current_month']} vs {growth['previous_month']}")
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=df_quarterly['quarter'],
+            y=df_quarterly['amount'],
+            name='Amount',
+            marker_color='#FF6B6B',
+            text=df_quarterly['amount'].apply(lambda x: f'₹{x:,.0f}'),
+            textposition='outside'
+        ))
         
-        st.markdown("---")
+        fig.add_trace(go.Scatter(
+            x=df_quarterly['quarter'],
+            y=df_quarterly['count'],
+            name='Count',
+            yaxis='y2',
+            mode='lines+markers',
+            marker=dict(size=10, color='#4ECDC4'),
+            line=dict(width=3)
+        ))
+        
+        fig.update_layout(
+            yaxis=dict(title='Amount (₹)', side='left'),
+            yaxis2=dict(title='Loan Count', side='right', overlaying='y'),
+            xaxis_title='Quarter',
+            height=450,
+            hovermode='x unified',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No quarterly data available")
+    
+    st.markdown("---")
     
     # Charts Row 1
     col1, col2 = st.columns(2)
@@ -114,20 +223,20 @@ def render():
             st.info("No monthly data available")
     
     with col2:
-        st.markdown("### 🏘️ Ward-wise Distribution")
-        ward_data = dashboard_data['ward_distribution']
-        if ward_data:
-            df_ward = pd.DataFrame(ward_data[:10])  # Top 10 wards
+        st.markdown("### 📍 Place-wise Distribution")
+        place_data = dashboard_data['place_distribution']
+        if place_data:
+            df_place = pd.DataFrame(place_data[:10])  # Top 10 places
             
             fig = px.bar(
-                df_ward,
+                df_place,
                 x='total_amount',
-                y='ward',
+                y='place',
                 orientation='h',
                 text='total_loans',
                 color='active_loans',
                 color_continuous_scale='Viridis',
-                labels={'total_amount': 'Total Amount (₹)', 'ward': 'Ward', 'active_loans': 'Active Loans'}
+                labels={'total_amount': 'Total Amount (₹)', 'place': 'Place', 'active_loans': 'Active Loans'}
             )
             
             fig.update_traces(texttemplate='%{text} loans', textposition='outside')
@@ -135,7 +244,7 @@ def render():
             
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No ward data available")
+            st.info("No place data available")
     
     st.markdown("---")
     
@@ -283,7 +392,7 @@ def render():
                 'date': 'Date',
                 'name': 'Borrower Name',
                 'amount': st.column_config.NumberColumn('Amount', format="₹%.2f"),
-                'ward': 'Ward'
+                'place': 'Place'
             },
             hide_index=True,
             use_container_width=True

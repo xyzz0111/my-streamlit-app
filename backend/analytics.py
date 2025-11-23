@@ -1,6 +1,6 @@
 """
 Loan Management System - Analytics & Metrics Module
-Provides business insights and growth metrics
+Provides business insights and growth metrics with enhanced trend analysis
 """
 
 from datetime import datetime, timedelta
@@ -8,7 +8,7 @@ from collections import defaultdict
 import calendar
 
 def parse_date(date_str):
-    """Parse date string to datetime object"""
+    """Parse dae string to datetime object"""
     try:
         return datetime.strptime(date_str, '%Y-%m-%d')
     except:
@@ -23,6 +23,10 @@ def parse_amount(amount_str):
         return float(str(amount_str).replace(',', '').strip())
     except:
         return 0.0
+
+def get_quarter(dt):
+    """Get quarter from datetime object"""
+    return f"Q{(dt.month - 1) // 3 + 1} {dt.year}"
 
 def calculate_basic_metrics(records):
     """
@@ -112,34 +116,35 @@ def get_monthly_disbursement_data(records):
     
     return result
 
-def get_ward_wise_distribution(records):
+def get_place_wise_distribution(records):
     """
-    Get loan distribution by ward/area
-    Returns: list of dicts with ward and metrics
+    Get loan distribution by address/place
+    Returns: list of dicts with place and metrics
     """
     if not records or len(records) <= 1:
         return []
     
-    ward_data = defaultdict(lambda: {'count': 0, 'amount': 0.0, 'active': 0})
+    place_data = defaultdict(lambda: {'count': 0, 'amount': 0.0, 'active': 0})
     
     for row in records[1:]:
         if len(row) < 11:
             continue
         
-        ward = row[6] if len(row) > 6 else 'Unknown'
+        # Use addressEnglish (index 5) for place
+        place = row[5] if len(row) > 5 else 'Unknown'
         amount = parse_amount(row[10]) if len(row) > 10 else 0
         status = row[14] if len(row) > 14 else 'Active'
         
-        if ward.strip():
-            ward_data[ward]['count'] += 1
-            ward_data[ward]['amount'] += amount
+        if place.strip():
+            place_data[place]['count'] += 1
+            place_data[place]['amount'] += amount
             if status == 'Active':
-                ward_data[ward]['active'] += 1
+                place_data[place]['active'] += 1
     
     result = []
-    for ward, data in ward_data.items():
+    for place, data in place_data.items():
         result.append({
-            'ward': ward,
+            'place': place,
             'total_loans': data['count'],
             'active_loans': data['active'],
             'total_amount': round(data['amount'], 2)
@@ -211,7 +216,7 @@ def get_recent_activity(records, days=30):
                 'date': date_str,
                 'name': row[3] if len(row) > 3 else '',
                 'amount': parse_amount(row[10]) if len(row) > 10 else 0,
-                'ward': row[6] if len(row) > 6 else ''
+                'place': row[5] if len(row) > 5 else ''
             })
     
     recent_loans.sort(key=lambda x: x['date'], reverse=True)
@@ -301,35 +306,162 @@ def get_interest_analysis(records):
         }
     }
 
+def get_quarterly_disbursement_data(records):
+    """
+    Get quarterly loan disbursement data
+    Returns: list of dicts with quarter, count, and amount
+    """
+    if not records or len(records) <= 1:
+        return []
+    
+    quarterly_data = defaultdict(lambda: {'count': 0, 'amount': 0.0})
+    
+    for row in records[1:]:
+        if len(row) < 11:
+            continue
+        
+        date_str = row[1]
+        amount = parse_amount(row[10]) if len(row) > 10 else 0
+        
+        dt = parse_date(date_str)
+        if dt:
+            quarter = get_quarter(dt)
+            quarterly_data[quarter]['count'] += 1
+            quarterly_data[quarter]['amount'] += amount
+    
+    result = []
+    for quarter in sorted(quarterly_data.keys()):
+        result.append({
+            'quarter': quarter,
+            'count': quarterly_data[quarter]['count'],
+            'amount': round(quarterly_data[quarter]['amount'], 2)
+        })
+    
+    return result
+
 def get_growth_metrics(records):
     """
-    Calculate month-over-month growth metrics
-    Returns: dict with growth percentages
+    Calculate comprehensive growth metrics:
+    - Month-over-month
+    - Quarter-over-quarter
+    - Year-over-year quarterly comparison
+    - Year-over-year annual comparison
     """
     monthly_data = get_monthly_disbursement_data(records)
+    quarterly_data = get_quarterly_disbursement_data(records)
     
-    if len(monthly_data) < 2:
-        return {
-            'mom_growth_count': 0,
-            'mom_growth_amount': 0,
-            'trend': 'stable'
+    growth_metrics = {
+        'monthly': {},
+        'quarterly': {},
+        'yoy_quarterly': {},
+        'yearly': {}
+    }
+    
+    # Month-over-month growth
+    if len(monthly_data) >= 2:
+        current = monthly_data[-1]
+        previous = monthly_data[-2]
+        
+        count_growth = ((current['count'] - previous['count']) / previous['count'] * 100) if previous['count'] > 0 else 0
+        amount_growth = ((current['amount'] - previous['amount']) / previous['amount'] * 100) if previous['amount'] > 0 else 0
+        
+        growth_metrics['monthly'] = {
+            'count_growth': round(count_growth, 2),
+            'amount_growth': round(amount_growth, 2),
+            'trend': 'growing' if amount_growth > 5 else 'declining' if amount_growth < -5 else 'stable',
+            'current_period': current['month'],
+            'previous_period': previous['month'],
+            'current_count': current['count'],
+            'previous_count': previous['count'],
+            'current_amount': current['amount'],
+            'previous_amount': previous['amount']
         }
     
-    current = monthly_data[-1]
-    previous = monthly_data[-2]
+    # Quarter-over-quarter growth
+    if len(quarterly_data) >= 2:
+        current = quarterly_data[-1]
+        previous = quarterly_data[-2]
+        
+        count_growth = ((current['count'] - previous['count']) / previous['count'] * 100) if previous['count'] > 0 else 0
+        amount_growth = ((current['amount'] - previous['amount']) / previous['amount'] * 100) if previous['amount'] > 0 else 0
+        
+        growth_metrics['quarterly'] = {
+            'count_growth': round(count_growth, 2),
+            'amount_growth': round(amount_growth, 2),
+            'trend': 'growing' if amount_growth > 5 else 'declining' if amount_growth < -5 else 'stable',
+            'current_period': current['quarter'],
+            'previous_period': previous['quarter'],
+            'current_count': current['count'],
+            'previous_count': previous['count'],
+            'current_amount': current['amount'],
+            'previous_amount': previous['amount']
+        }
     
-    count_growth = ((current['count'] - previous['count']) / previous['count'] * 100) if previous['count'] > 0 else 0
-    amount_growth = ((current['amount'] - previous['amount']) / previous['amount'] * 100) if previous['amount'] > 0 else 0
+    # Year-over-year quarterly comparison (same quarter, different year)
+    if len(quarterly_data) >= 5:  # Need at least 5 quarters to compare Q1 2024 with Q1 2023
+        current = quarterly_data[-1]
+        current_q = current['quarter'].split()[0]  # e.g., "Q1"
+        current_year = int(current['quarter'].split()[1])  # e.g., 2024
+        
+        # Find same quarter from previous year
+        target_quarter = f"{current_q} {current_year - 1}"
+        previous_year_data = next((q for q in quarterly_data if q['quarter'] == target_quarter), None)
+        
+        if previous_year_data:
+            count_growth = ((current['count'] - previous_year_data['count']) / previous_year_data['count'] * 100) if previous_year_data['count'] > 0 else 0
+            amount_growth = ((current['amount'] - previous_year_data['amount']) / previous_year_data['amount'] * 100) if previous_year_data['amount'] > 0 else 0
+            
+            growth_metrics['yoy_quarterly'] = {
+                'count_growth': round(count_growth, 2),
+                'amount_growth': round(amount_growth, 2),
+                'trend': 'growing' if amount_growth > 5 else 'declining' if amount_growth < -5 else 'stable',
+                'current_period': current['quarter'],
+                'previous_period': previous_year_data['quarter'],
+                'current_count': current['count'],
+                'previous_count': previous_year_data['count'],
+                'current_amount': current['amount'],
+                'previous_amount': previous_year_data['amount']
+            }
     
-    trend = 'growing' if amount_growth > 5 else 'declining' if amount_growth < -5 else 'stable'
+    # Year-over-year annual growth
+    yearly_totals = defaultdict(lambda: {'count': 0, 'amount': 0.0})
+    for row in records[1:]:
+        if len(row) < 11:
+            continue
+        
+        date_str = row[1]
+        amount = parse_amount(row[10]) if len(row) > 10 else 0
+        
+        dt = parse_date(date_str)
+        if dt:
+            year = str(dt.year)
+            yearly_totals[year]['count'] += 1
+            yearly_totals[year]['amount'] += amount
     
-    return {
-        'mom_growth_count': round(count_growth, 2),
-        'mom_growth_amount': round(amount_growth, 2),
-        'trend': trend,
-        'current_month': current['month'],
-        'previous_month': previous['month']
-    }
+    if len(yearly_totals) >= 2:
+        years = sorted(yearly_totals.keys())
+        current_year = years[-1]
+        previous_year = years[-2]
+        
+        current = yearly_totals[current_year]
+        previous = yearly_totals[previous_year]
+        
+        count_growth = ((current['count'] - previous['count']) / previous['count'] * 100) if previous['count'] > 0 else 0
+        amount_growth = ((current['amount'] - previous['amount']) / previous['amount'] * 100) if previous['amount'] > 0 else 0
+        
+        growth_metrics['yearly'] = {
+            'count_growth': round(count_growth, 2),
+            'amount_growth': round(amount_growth, 2),
+            'trend': 'growing' if amount_growth > 5 else 'declining' if amount_growth < -5 else 'stable',
+            'current_period': current_year,
+            'previous_period': previous_year,
+            'current_count': current['count'],
+            'previous_count': previous['count'],
+            'current_amount': round(current['amount'], 2),
+            'previous_amount': round(previous['amount'], 2)
+        }
+    
+    return growth_metrics
 
 def get_yearly_summary(records):
     """
@@ -380,12 +512,12 @@ def generate_dashboard_data(records):
     return {
         'basic_metrics': calculate_basic_metrics(records),
         'monthly_trend': get_monthly_disbursement_data(records),
+        'quarterly_trend': get_quarterly_disbursement_data(records),
         'yearly_summary': get_yearly_summary(records),
-        'ward_distribution': get_ward_wise_distribution(records),
+        'place_distribution': get_place_wise_distribution(records),
         'loan_ranges': get_loan_amount_ranges(records),
         'recent_activity': get_recent_activity(records, days=30),
         'top_borrowers': get_top_borrowers(records, limit=10),
         'interest_analysis': get_interest_analysis(records),
         'growth_metrics': get_growth_metrics(records)
     }
-
