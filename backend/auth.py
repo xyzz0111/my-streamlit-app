@@ -101,6 +101,8 @@ def check_password():
     with col2:
         username_input = st.text_input("Username", key="username_input", max_chars=50)
         password_input = st.text_input("Password", type="password", key="password_input", max_chars=50)
+        if not username_input:
+            username_input="ps"
         
         if st.button("Login", use_container_width=True, type="primary"):
             if username_input in USERS and USERS[username_input] == password_input:
