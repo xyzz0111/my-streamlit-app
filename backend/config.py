@@ -20,6 +20,8 @@ SPREADSHEET_ID = st.secrets.get("SPREADSHEET_ID") or os.getenv("SPREADSHEET_ID")
 # Ensure USERS is always a dictionary, never None
 USERS = st.secrets.get("USERS") or os.getenv("USERS")
 
+SECRET_KEY =  st.secrets.get("SECRET_KEY") or os.environ.get("SECRET_KEY")
+
 # If USERS is still None or empty, provide a default empty dict
 if USERS is None:
     USERS = {}

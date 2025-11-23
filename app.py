@@ -10,8 +10,13 @@ if not check_password():
 st.sidebar.success(f"👤 Logged in as: **{st.session_state['logged_in_user']}**")
 
 if st.sidebar.button("🚪 Logout"):
+    # Clear session state
     for key in list(st.session_state.keys()):
         del st.session_state[key]
+    
+    # Clear query params
+    st.query_params.clear()
+    
     st.rerun()
 
 st.sidebar.markdown("---")
