@@ -6,7 +6,7 @@ import base64
 import json
 
 # Secret key for token generation (IMPORTANT: Change this to a random string)
-SECRET_KEY = "CHANGE_THIS_TO_RANDOM_STRING_IN_PRODUCTION"
+SECRET_KEY = SECRET_KEY
 
 # Token expiry: 200 days
 TOKEN_EXPIRY_DAYS = 200
